@@ -2,7 +2,7 @@
 import { useState } from 'react'
 
 export default function TestApi() {
-  const [apiKey, setApiKey] = useState('')
+  const [apiKey, setApiKey] = useState('demo_key_123')
   const [response, setResponse] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -30,7 +30,7 @@ export default function TestApi() {
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            API Key
+            API Key (Use demo key or your own)
           </label>
           <input
             type="text"
@@ -39,6 +39,9 @@ export default function TestApi() {
             placeholder="Enter your API key"
             className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+          <p className="text-sm text-gray-500 mt-1">
+            Demo key: <code className="bg-gray-100 px-1">demo_key_123</code>
+          </p>
         </div>
         
         <button
@@ -62,4 +65,4 @@ export default function TestApi() {
       </div>
     </div>
   )
-              }
+}
