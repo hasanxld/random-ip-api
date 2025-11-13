@@ -3,7 +3,6 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // For Netlify
   trailingSlash: true,
   images: {
     unoptimized: true
