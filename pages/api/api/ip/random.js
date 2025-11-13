@@ -1,25 +1,24 @@
 // pages/api/ip/random.js
-// Simple in-memory store for API keys (use database in production)
-const apiKeys = new Map()
-
-// Pre-populate with some demo keys for testing
-apiKeys.set('demo_key_123', {
-  email: 'demo@example.com',
-  createdAt: new Date().toISOString(),
-  requests: 0
-})
+import { validateApiKey } from '../../../lib/database'
 
 function generateRandomIP() {
-  // Generate random IPv4 address
-  const octet1 = Math.floor(Math.random() * 255) + 1
-  const octet2 = Math.floor(Math.random() * 256)
-  const octet3 = Math.floor(Math.random() * 256)
-  const octet4 = Math.floor(Math.random() * 256)
+  const firstOctet = Math.floor(Math.random() * 223) + 1
+  const secondOctet = Math.floor(Math.random() * 256)
+  const thirdOctet = Math.floor(Math.random() * 256)
+  const fourthOctet = Math.floor(Math.random() * 256)
   
-  return `${octet1}.${octet2}.${octet3}.${octet4}`
+  return `${firstOctet}.${secondOctet}.${thirdOctet}.${fourthOctet}`
 }
 
-export default function handler(req, res) {
+function generateRandomIPv6() {
+  const segments = []
+  for (let i = 0; i < 8; i++) {
+    segments.push(Math.floor(Math.random() * 65536).toString(16))
+  }
+  return segments.join(':')
+}
+
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ 
       success: false, 
@@ -28,41 +27,68 @@ export default function handler(req, res) {
     })
   }
 
-  const { api_key } = req.query
+  try {
+    const { api_key, type = 'ipv4' } = req.query
 
-  if (!api_key) {
-    return res.status(400).json({
+    if (!api_key) {
+      return res.status(400).json({
+        success: false,
+        error: 'API key is required',
+        code: 400
+      })
+    }
+
+    // Demo key for testing
+    if (api_key === 'demo_key_123') {
+      const ip = type.toLowerCase() === 'ipv6' ? generateRandomIPv6() : generateRandomIP()
+      const ipType = type.toLowerCase() === 'ipv6' ? 'IPv6' : 'IPv4'
+      
+      return res.status(200).json({
+        success: true,
+        ip: ip,
+        type: ipType,
+        timestamp: new Date().toISOString(),
+        requests: 'demo',
+        message: 'Using demo key - create account for full features'
+      })
+    }
+
+    // Validate API key for real users
+    const validation = await validateApiKey(api_key)
+
+    if (!validation.valid) {
+      return res.status(401).json({
+        success: false,
+        error: validation.error || 'Invalid API key',
+        code: 401
+      })
+    }
+
+    // Generate random IP based on type
+    let ip, ipType
+    if (type.toLowerCase() === 'ipv6') {
+      ip = generateRandomIPv6()
+      ipType = 'IPv6'
+    } else {
+      ip = generateRandomIP()
+      ipType = 'IPv4'
+    }
+
+    // Return success response
+    res.status(200).json({
+      success: true,
+      ip: ip,
+      type: ipType,
+      timestamp: new Date().toISOString(),
+      requests: validation.data.totalRequests
+    })
+
+  } catch (error) {
+    console.error('Error in random IP API:', error)
+    res.status(500).json({
       success: false,
-      error: 'API key is required',
-      code: 400
+      error: 'Internal server error',
+      code: 500
     })
   }
-
-  // Check if API key exists
-  if (!apiKeys.has(api_key) && api_key !== 'demo_key_123') {
-    return res.status(401).json({
-      success: false,
-      error: 'Invalid API key',
-      code: 401
-    })
-  }
-
-  // Update request count
-  if (apiKeys.has(api_key)) {
-    const keyData = apiKeys.get(api_key)
-    keyData.requests++
-    apiKeys.set(api_key, keyData)
-  }
-
-  // Generate random IP
-  const randomIP = generateRandomIP()
-
-  // Return success response
-  res.status(200).json({
-    success: true,
-    ip: randomIP,
-    timestamp: new Date().toISOString(),
-    type: 'IPv4',
-    requests: apiKeys.get(api_key)?.requests || 0
-  })
 }
