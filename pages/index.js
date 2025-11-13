@@ -1,14 +1,14 @@
 // pages/index.js
 import { useState } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
+import { useAuth } from '../context/AuthContext'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import ApiKeyModal from '../components/ApiKeyModal'
 import TestApi from '../components/TestApi'
 
 export default function Home() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [apiKey, setApiKey] = useState('')
+  const { currentUser } = useAuth()
 
   return (
     <>
@@ -32,20 +32,30 @@ export default function Home() {
               Generate random IP addresses instantly with our reliable API service
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-white text-blue-600 px-8 py-3 font-semibold hover:bg-blue-50 block sm:inline-block"
-              >
-                <i className="ri-key-2-line mr-2"></i>
-                Get Free API Key
-              </button>
-              <a
+              {currentUser ? (
+                <Link
+                  href="/dashboard"
+                  className="bg-white text-blue-600 px-8 py-3 font-semibold hover:bg-blue-50 block sm:inline-block"
+                >
+                  <i className="ri-dashboard-line mr-2"></i>
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <Link
+                  href="/signup"
+                  className="bg-white text-blue-600 px-8 py-3 font-semibold hover:bg-blue-50 block sm:inline-block"
+                >
+                  <i className="ri-user-add-line mr-2"></i>
+                  Get Started Free
+                </Link>
+              )}
+              <Link
                 href="/documentation"
                 className="border-2 border-white text-white px-8 py-3 font-semibold hover:bg-white hover:text-blue-600 transition-colors block sm:inline-block"
               >
                 <i className="ri-book-line mr-2"></i>
                 View Documentation
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -104,7 +114,7 @@ export default function Home() {
                 Test the API
               </h2>
               <p className="text-lg text-gray-600">
-                Try our API instantly with your API key
+                Try our API instantly with a demo key
               </p>
             </div>
             <TestApi />
@@ -120,23 +130,26 @@ export default function Home() {
             <p className="text-xl text-gray-300 mb-8">
               Join thousands of developers using our Random IP API
             </p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 text-white px-8 py-3 font-semibold hover:bg-blue-700"
-            >
-              Get Your Free API Key Now
-            </button>
+            {currentUser ? (
+              <Link
+                href="/dashboard"
+                className="bg-blue-600 text-white px-8 py-3 font-semibold hover:bg-blue-700"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/signup"
+                className="bg-blue-600 text-white px-8 py-3 font-semibold hover:bg-blue-700"
+              >
+                Create Free Account
+              </Link>
+            )}
           </div>
         </section>
       </main>
 
       <Footer />
-
-      <ApiKeyModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onGenerateKey={(key) => setApiKey(key)}
-      />
     </>
   )
-}
+                    }
